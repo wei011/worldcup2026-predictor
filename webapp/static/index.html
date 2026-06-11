@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 世界杯预测中心</title>
+<link rel="stylesheet" href="style.css?v=2">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+</head>
+<body>
+
+<div id="loading" class="loading-overlay">
+  <div class="loading-card">
+    <div class="ball-spinner">⚽</div>
+    <h2>2026 世界杯预测中心</h2>
+    <p id="loading-phase">正在启动…</p>
+    <div class="progress-track"><div id="loading-bar" class="progress-fill"></div></div>
+    <p class="loading-hint">首次启动需下载真实数据并回放 4.9 万场历史比赛，约需十几秒</p>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="trophy">🏆</div>
+    <h1>2026 世界杯预测中心</h1>
+    <p class="hero-sub">🇺🇸 美国 · 🇨🇦 加拿大 · 🇲🇽 墨西哥 &nbsp;|&nbsp; 48 队 · 104 场 &nbsp;|&nbsp; Elo 评分 × 泊松模型 × 蒙特卡洛</p>
+    <div class="hero-chips" id="hero-chips"></div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="dashboard">📊 总览</button>
+  <button class="tab" data-tab="groups">🏟️ 小组赛</button>
+  <button class="tab" data-tab="matches">📅 赛程预测</button>
+  <button class="tab" data-tab="bracket">🛤️ 对阵图</button>
+  <button class="tab" data-tab="lab">🧪 模拟实验室</button>
+</nav>
+
+<main>
+  <section id="view-dashboard" class="view active">
+    <div class="dash-grid">
+      <div class="card chart-card">
+        <div class="card-head">
+          <h3>晋级概率排行</h3>
+          <div class="stage-chips" id="stage-chips"></div>
+        </div>
+        <div id="champ-chart" class="bar-chart"></div>
+      </div>
+      <div class="dash-side">
+        <div class="card" id="card-favorite"></div>
+        <div class="card" id="card-hosts"></div>
+        <div class="card" id="card-opener"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-groups" class="view">
+    <div class="groups-grid" id="groups-grid"></div>
+  </section>
+
+  <section id="view-matches" class="view">
+    <div class="match-controls card">
+      <select id="filter-group"><option value="">全部小组</option></select>
+      <input id="filter-team" type="search" placeholder="搜索球队…">
+      <span class="muted" id="match-count"></span>
+    </div>
+    <div id="match-list"></div>
+  </section>
+
+  <section id="view-bracket" class="view">
+    <p class="bracket-hint muted">每个位置展示蒙特卡洛模拟中最常出现的球队及其概率，对阵结构解析自 FIFA 官方占位符</p>
+    <div class="bracket-scroll"><div class="bracket" id="bracket"></div></div>
+  </section>
+
+  <section id="view-lab" class="view">
+    <div class="lab-grid">
+      <div class="card">
+        <h3>🎲 重跑模拟</h3>
+        <p class="muted">模拟届数越多，概率越稳定。小组赛开打后可重启服务获取最新赛果。</p>
+        <div class="lab-form">
+          <label>模拟届数
+            <select id="sim-count">
+              <option value="2000">2,000（快速）</option>
+              <option value="10000" selected>10,000（推荐）</option>
+              <option value="20000">20,000</option>
+              <option value="50000">50,000（高精度）</option>
+            </select>
+          </label>
+          <label>随机种子（可选）<input id="sim-seed" type="number" placeholder="留空则随机"></label>
+          <button id="sim-run" class="btn-gold">🚀 开始模拟</button>
+        </div>
+        <div id="sim-progress" class="sim-progress hidden">
+          <div class="progress-track"><div id="sim-bar" class="progress-fill"></div></div>
+          <p id="sim-progress-text" class="muted"></p>
+        </div>
+        <div id="sim-result" class="muted"></div>
+      </div>
+      <div class="card">
+        <h3>🔬 模型与数据</h3>
+        <div id="model-info"></div>
+      </div>
+      <div class="card">
+        <h3>⭐ 参赛队 Elo 排行</h3>
+        <div id="elo-list" class="elo-list"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>数据来源：<a href="https://www.fifa.com" target="_blank">FIFA 官方赛程接口</a> ·
+  <a href="https://github.com/martj42/international_results" target="_blank">martj42 历史赛果数据集（1872 至今）</a>
+  &nbsp;|&nbsp; 预测为概率参考，足球是圆的 ⚽</p>
+</footer>
+
+<div id="modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" id="modal-card"></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js?v=2"></script>
+</body>
+</html>

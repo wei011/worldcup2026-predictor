@@ -1,0 +1,14 @@
+# 运行时下载的数据缓存（启动时自动从真实接口拉取）
+data/
+
+# 预测输出
+output/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# 系统文件
+.DS_Store
