@@ -59,6 +59,54 @@ def adv(team):
     return HOME_ADVANTAGE if team in HOSTS else 0.0
 
 
+def load_models(refresh=False):
+    """拉取真实数据并返回 (ratings, goal_model, fixture_records)。"""
+    history = fetch.history_csv_path(refresh=refresh)
+    fixtures = fetch.fixtures(refresh=refresh)
+    ratings, samples = compute_ratings(history)
+    model = GoalModel(samples)
+    recs = [match_record(m) for m in fixtures]
+    recs = [r for r in recs if r["home"] and r["away"]]  # 淘汰赛未定队伍跳过
+    return ratings, model, recs
+
+
+def predict(ratings, model, r):
+    """返回 (胜, 平, 负, 最可能比分)。"""
+    d = ratings[r["home"]] + adv(r["home"]) - ratings[r["away"]] - adv(r["away"])
+    w, dr, l = model.outcome_probs(d)
+    la, lb = model.lam(d), model.lam(-d)
+    best, bp = (0, 0), -1
+    for i in range(6):
+        for j in range(6):
+            p = (math.exp(-la) * la**i / math.factorial(i)) * \
+                (math.exp(-lb) * lb**j / math.factorial(j))
+            if p > bp:
+                bp, best = p, (i, j)
+    return w, dr, l, best
+
+
+def scorecard_stats(ratings, model, recs):
+    """返回 (已结束比赛明细列表, 命中数, 总场次, 平均Brier)。"""
+    played = sorted([r for r in recs if r["played"] and r["hs"] is not None],
+                    key=lambda r: (r["date"], r["time_utc"]))
+    rows, hit, brier = [], 0, 0.0
+    for r in played:
+        w, dr, l, _ = predict(ratings, model, r)
+        if r["hs"] > r["as"]:
+            actual, probs = "主胜", (1, 0, 0)
+        elif r["hs"] < r["as"]:
+            actual, probs = "客胜", (0, 0, 1)
+        else:
+            actual, probs = "平局", (0, 1, 0)
+        pred_max = max((w, "主胜"), (dr, "平局"), (l, "客胜"))[1]
+        ok = pred_max == actual
+        hit += ok
+        brier += sum((p - a) ** 2 for p, a in zip((w, dr, l), probs))
+        rows.append({**r, "w": w, "dr": dr, "l": l, "actual": actual, "ok": ok})
+    n = len(played)
+    return rows, hit, n, (brier / n if n else 0.0)
+
+
 def match_record(m):
     home = m["Home"]["TeamName"][0]["Description"] if m.get("Home") else None
     away = m["Away"]["TeamName"][0]["Description"] if m.get("Away") else None
@@ -87,27 +135,7 @@ def main():
     target = args.date or dt.date.today().isoformat()
 
     print("获取真实数据（FIFA 官方赛程/赛果 + 历史赛果库）...")
-    history = fetch.history_csv_path(refresh=args.refresh)
-    fixtures = fetch.fixtures(refresh=args.refresh)
-    ratings, samples = compute_ratings(history)
-    model = GoalModel(samples)
-
-    recs = [match_record(m) for m in fixtures]
-    recs = [r for r in recs if r["home"] and r["away"]]  # 淘汰赛未定队伍跳过
-
-    def predict(r):
-        d = ratings[r["home"]] + adv(r["home"]) - ratings[r["away"]] - adv(r["away"])
-        w, dr, l = model.outcome_probs(d)
-        # 最可能比分
-        la, lb = model.lam(d), model.lam(-d)
-        best, bp = (0, 0), -1
-        for i in range(6):
-            for j in range(6):
-                p = (math.exp(-la) * la**i / math.factorial(i)) * \
-                    (math.exp(-lb) * lb**j / math.factorial(j))
-                if p > bp:
-                    bp, best = p, (i, j)
-        return w, dr, l, best
+    ratings, model, recs = load_models(refresh=args.refresh)
 
     # ---------- 今日比赛 ----------
     today = sorted([r for r in recs if r["date"] == target], key=lambda r: r["time_utc"])
@@ -115,7 +143,7 @@ def main():
     if not today:
         print("  这一天没有已排定对阵的比赛。")
     for r in today:
-        w, dr, l, (gh, ga) = predict(r)
+        w, dr, l, (gh, ga) = predict(ratings, model, r)
         tag = r["group"] or r["stage"]
         print(f"\n  [{tag}] {r['time_utc']} UTC"
               + (f" · {r['city']}" if r["city"] else ""))
@@ -133,33 +161,19 @@ def main():
 
     # ---------- 战绩单 ----------
     if args.scorecard:
-        played = sorted([r for r in recs if r["played"] and r["hs"] is not None],
-                        key=lambda r: (r["date"], r["time_utc"]))
-        if played:
-            hit = 0
-            brier = 0.0
-            print(f"\n{'='*60}\n  开赛至今模型战绩单（{len(played)} 场已结束）\n")
+        rows, hit, n, brier = scorecard_stats(ratings, model, recs)
+        if rows:
+            print(f"\n{'='*60}\n  开赛至今模型战绩单（{n} 场已结束）\n")
             print(f"  {'日期':<11}{'对阵':<22}{'赛果':<8}{'模型(胜/平/负)':<18}{'命中'}")
-            for r in played:
-                w, dr, l, _ = predict(r)
-                if r["hs"] > r["as"]:
-                    actual, probs = "主胜", (1, 0, 0)
-                elif r["hs"] < r["as"]:
-                    actual, probs = "客胜", (0, 0, 1)
-                else:
-                    actual, probs = "平局", (0, 1, 0)
-                pred_max = max((w, "主胜"), (dr, "平局"), (l, "客胜"))[1]
-                ok = pred_max == actual
-                hit += ok
-                brier += sum((p - a) ** 2 for p, a in zip((w, dr, l), probs))
+            for r in rows:
                 cn_h = DISPLAY.get(r["home"], (r["home"],))[0]
                 cn_a = DISPLAY.get(r["away"], (r["away"],))[0]
                 vs = f"{cn_h}-{cn_a}"
                 print(f"  {r['date']:<11}{vs:<20}{r['hs']}:{r['as']}   "
-                      f"{actual:<6}{w:.0%}/{dr:.0%}/{l:.0%}      {'✅' if ok else '❌'}")
-            n = len(played)
+                      f"{r['actual']:<6}{r['w']:.0%}/{r['dr']:.0%}/{r['l']:.0%}"
+                      f"      {'✅' if r['ok'] else '❌'}")
             print(f"\n  方向命中率：{hit}/{n} = {hit/n:.0%}")
-            print(f"  平均 Brier score：{brier/n:.3f}（越低越好，三类基准 0.667）")
+            print(f"  平均 Brier score：{brier:.3f}（越低越好，三类基准 0.667）")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@
 ![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 ![Data](https://img.shields.io/badge/data-100%25%20real%20APIs-orange)
+[![Update live scorecard](https://github.com/wei011/worldcup2026-predictor/actions/workflows/update-scorecard.yml/badge.svg)](https://github.com/wei011/worldcup2026-predictor/actions/workflows/update-scorecard.yml)
 
 **为什么值得一试：**
 
@@ -51,26 +52,15 @@ Mexico              A    1976  98.1%   72.3%   43.6%   24.4%   12.1%    5.9%
 ...
 ```
 
+<!-- SCORECARD:START -->
+
 ## 🔴 实时战绩追踪：看着模型被真实赛果检验
 
-世界杯已经开打。`today.py` 每天拉取 FIFA 官方真实赛果，对比赛前预测，给出模型的"成绩单"——这才是一个预测项目最该接受的考验。
+世界杯已经开打。每天由 GitHub Actions 自动拉取 FIFA 官方真实赛果，对比赛前预测，给出模型的“成绩单”——这才是一个预测项目最该接受的考验。
 
-```bash
-$ python3 today.py --date 2026-06-14 --scorecard
-```
+> 🗓️ **数据截至 2026-06-14 (UTC) 自动更新** · 本地随时复现：`python3 today.py --scorecard`
 
-**今日比赛预测（节选）：**
-
-```
-[Group F] 20:00 UTC · Dallas
-🇳🇱 荷兰  vs  🇯🇵 日本
-   胜 38.5% ████████      ← 今日唯一的硬仗，三分天下
-   平 27.5% ██████
-   负 33.9% ███████
-   模型最可能比分：1 - 1
-```
-
-**开赛至今战绩单（小组赛前 3 天）：**
+**已结束 4 场　·　方向命中 3/4 (75%)　·　平均 Brier score 0.494**（三分类瞎猜基准 0.667，越低越好）
 
 | 日期 | 对阵 | 赛果 | 模型(胜/平/负) | 命中 |
 |---|---|---|---|---|
@@ -79,9 +69,9 @@ $ python3 today.py --date 2026-06-14 --scorecard
 | 06-12 | 加拿大 vs 波黑 | 1:1 | 73% / 17% / 10% | ❌ |
 | 06-13 | 美国 vs 巴拉圭 | 4:1 | 50% / 26% / 24% | ✅ |
 
-> **方向命中 3/4 (75%)　·　平均 Brier score 0.494**（三分类瞎猜基准 0.667，越低越好）
+模型不藏着掖着：赢了就赢了，被爆冷也照实记上。整届赛事的 Brier score 会一路累积到 7/19 决赛——评价预测模型的正确方式，不是“猜对几场”，而是**概率校准得准不准**。
 
-模型不藏着掖着：赢了就赢了，被爆冷（加拿大被波黑逼平）也照实记上。整届赛事的 Brier score 会一路累积到 7/19 决赛——这就是评价预测模型的正确方式：不是"猜对几场"，而是**概率校准得准不准**。
+<!-- SCORECARD:END -->
 
 ## 🖥️ Web 界面功能
 
