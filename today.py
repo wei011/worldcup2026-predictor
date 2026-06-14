@@ -63,8 +63,8 @@ def load_models(refresh=False):
     """拉取真实数据并返回 (ratings, goal_model, fixture_records)。"""
     history = fetch.history_csv_path(refresh=refresh)
     fixtures = fetch.fixtures(refresh=refresh)
-    ratings, samples = compute_ratings(history)
-    model = GoalModel(samples)
+    ratings, samples, score_samples = compute_ratings(history)
+    model = GoalModel(samples, score_samples)
     recs = [match_record(m) for m in fixtures]
     recs = [r for r in recs if r["home"] and r["away"]]  # 淘汰赛未定队伍跳过
     return ratings, model, recs
