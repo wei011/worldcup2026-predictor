@@ -41,14 +41,14 @@ def main():
 
     print("[2/4] 回放历史赛果计算 Elo 评分...")
     t0 = time.time()
-    ratings, samples = compute_ratings(history_path)
+    ratings, samples, score_samples = compute_ratings(history_path)
     print(f"  完成：{len(ratings)} 支球队，耗时 {time.time() - t0:.1f}s")
 
-    print("[3/4] 用历史进球数据校准泊松模型...")
-    model = GoalModel(samples)
+    print("[3/4] 用历史进球数据校准泊松模型 + Dixon-Coles 平局修正...")
+    model = GoalModel(samples, score_samples)
     print(
         f"  λ(d) = exp({model.a:.4f} + {model.b:.6f}·d)，"
-        f"校准样本 {model.n_samples} 条"
+        f"校准样本 {model.n_samples} 条；Dixon-Coles ρ = {model.rho:+.2f}"
     )
 
     tournament = Tournament(fifa_results)

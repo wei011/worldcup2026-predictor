@@ -59,14 +59,16 @@ def expected_score(rating_diff):
 
 
 def compute_ratings(history_path, calibration_since=1998):
-    """回放历史赛果，返回 (ratings, calibration_samples)。
+    """回放历史赛果，返回 (ratings, samples, score_samples)。
 
-    calibration_samples: [(elo_diff_含主场, 该方实际进球数), ...]
+    samples:       [(elo_diff_含主场, 该方实际进球数), ...]  —— 拟合 λ(d)
+    score_samples: [(elo_diff_含主场, 主队进球, 客队进球), ...] —— 拟合 Dixon-Coles ρ
     只采集 calibration_since 年之后的样本——此时各队评分已充分收敛，
     且更接近现代足球的进球水平。
     """
     ratings = defaultdict(lambda: BASE_RATING)
     samples = []
+    score_samples = []
 
     with open(history_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -84,6 +86,7 @@ def compute_ratings(history_path, calibration_since=1998):
             if int(row["date"][:4]) >= calibration_since:
                 samples.append((diff, hs))
                 samples.append((-diff, aws))
+                score_samples.append((diff, hs, aws))
 
             if hs > aws:
                 result = 1.0
@@ -97,4 +100,4 @@ def compute_ratings(history_path, calibration_since=1998):
             ratings[home] += delta
             ratings[away] -= delta
 
-    return dict(ratings), samples
+    return dict(ratings), samples, score_samples

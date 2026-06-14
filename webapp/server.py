@@ -98,6 +98,7 @@ def _build_meta(fifa_results, tournament, ratings, model):
             "a": round(model.a, 4),
             "b": round(model.b, 6),
             "n_samples": model.n_samples,
+            "dc_rho": round(model.rho, 3),
         },
         "sources": {
             "fixtures": fetch.FIFA_FIXTURES_URL,
@@ -134,10 +135,10 @@ def _bootstrap(initial_sims):
         fifa_results = fetch.fixtures()
 
         STATE["phase"] = "回放 4.9 万场历史赛果计算 Elo"
-        ratings, samples = compute_ratings(history_path)
+        ratings, samples, score_samples = compute_ratings(history_path)
 
-        STATE["phase"] = "校准泊松进球模型"
-        model = GoalModel(samples)
+        STATE["phase"] = "校准泊松进球模型 + Dixon-Coles 平局修正"
+        model = GoalModel(samples, score_samples)
         tournament = Tournament(fifa_results)
 
         DATA.update(ratings=ratings, model=model, tournament=tournament)
