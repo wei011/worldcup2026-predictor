@@ -47,6 +47,7 @@ DISPLAY = {
     "Curaçao": ("库拉索", "🇨🇼"), "Ivory Coast": ("科特迪瓦", "🇨🇮"),
     "Czech Republic": ("捷克", "🇨🇿"),
     "Bosnia and Herzegovina": ("波黑", "🇧🇦"),
+    "Qatar": ("卡塔尔", "🇶🇦"), "Paraguay ": ("巴拉圭", "🇵🇾"),
 }
 
 
@@ -59,12 +60,15 @@ def adv(team):
     return HOME_ADVANTAGE if team in HOSTS else 0.0
 
 
-def load_models(refresh=False):
-    """拉取真实数据并返回 (ratings, goal_model, fixture_records)。"""
+def load_models(refresh=False, use_dc=True):
+    """拉取真实数据并返回 (ratings, goal_model, fixture_records)。
+
+    use_dc=False 时不启用 Dixon-Coles 平局修正（ρ=0），即"老算法"基线双泊松。
+    """
     history = fetch.history_csv_path(refresh=refresh)
     fixtures = fetch.fixtures(refresh=refresh)
     ratings, samples, score_samples = compute_ratings(history)
-    model = GoalModel(samples, score_samples)
+    model = GoalModel(samples, score_samples if use_dc else None)
     recs = [match_record(m) for m in fixtures]
     recs = [r for r in recs if r["home"] and r["away"]]  # 淘汰赛未定队伍跳过
     return ratings, model, recs
@@ -130,12 +134,15 @@ def main():
     ap.add_argument("--date", default=None, help="YYYY-MM-DD，默认今天")
     ap.add_argument("--refresh", action="store_true")
     ap.add_argument("--scorecard", action="store_true", help="打印开赛至今战绩单")
+    ap.add_argument("--no-dc", action="store_true",
+                    help="关闭 Dixon-Coles 平局修正（老算法基线双泊松）")
     args = ap.parse_args()
 
     target = args.date or dt.date.today().isoformat()
 
     print("获取真实数据（FIFA 官方赛程/赛果 + 历史赛果库）...")
-    ratings, model, recs = load_models(refresh=args.refresh)
+    ratings, model, recs = load_models(refresh=args.refresh, use_dc=not args.no_dc)
+    print(f"  算法：{'基线双泊松（老算法，ρ=0）' if args.no_dc else f'双泊松 + Dixon-Coles（ρ={model.rho:+.2f}）'}")
 
     # ---------- 今日比赛 ----------
     today = sorted([r for r in recs if r["date"] == target], key=lambda r: r["time_utc"])
