@@ -1,0 +1,42 @@
+name: Update live scorecard
+
+# 每天定时刷新 README 里的「实时战绩追踪」板块。
+# 也可在 Actions 页面手动触发（workflow_dispatch）。
+on:
+  schedule:
+    # UTC 11:00 每天一次（覆盖前一天美洲赛区的所有比赛结果）
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-scorecard
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 项目零第三方依赖，无需 pip install
+      - name: Regenerate scorecard from real FIFA results
+        run: python3 scripts/update_scorecard.py
+
+      - name: Commit & push if README changed
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "战绩单无变化，跳过提交。"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: 自动更新实时战绩追踪（$(date -u +%Y-%m-%d)）"
+          git push
