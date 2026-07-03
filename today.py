@@ -48,6 +48,14 @@ DISPLAY = {
     "Czech Republic": ("捷克", "🇨🇿"),
     "Bosnia and Herzegovina": ("波黑", "🇧🇦"),
     "Qatar": ("卡塔尔", "🇶🇦"), "Paraguay ": ("巴拉圭", "🇵🇾"),
+    "Norway": ("挪威", "🇳🇴"), "Egypt": ("埃及", "🇪🇬"),
+    "Cape Verde": ("佛得角", "🇨🇻"), "Ghana": ("加纳", "🇬🇭"),
+    "Sweden": ("瑞典", "🇸🇪"), "Austria": ("奥地利", "🇦🇹"),
+    "Algeria": ("阿尔及利亚", "🇩🇿"), "Iran": ("伊朗", "🇮🇷"),
+    "Saudi Arabia": ("沙特", "🇸🇦"), "Tunisia": ("突尼斯", "🇹🇳"),
+    "Jordan": ("约旦", "🇯🇴"), "Iraq": ("伊拉克", "🇮🇶"),
+    "Uzbekistan": ("乌兹别克斯坦", "🇺🇿"), "New Zealand": ("新西兰", "🇳🇿"),
+    "DR Congo": ("刚果民主共和国", "🇨🇩"), "Congo DR": ("刚果民主共和国", "🇨🇩"),
 }
 
 

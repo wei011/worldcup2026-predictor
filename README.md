@@ -43,6 +43,9 @@ python3 today.py --date 2026-06-13              # 优化后（含平局修正）
 
 # 复现样本外回测，看每种优化到底带来多少提升
 python3 analysis/backtest.py
+
+# 期中复盘：逐场交作业 + 条件在真实赛果上重模拟剩余赛程
+python3 analysis/midterm_review.py
 ```
 
 就这么多。首次运行会自动下载并缓存数据（约 5 MB，十几秒），之后秒级启动。
@@ -148,6 +151,7 @@ FIFA 官方赛程/对阵图 ─────────────────�
 - **每日战绩自动追踪** —— `today.py` + GitHub Actions 每天拉取 FIFA 真实赛果，重算方向命中率与 Brier score，自动刷新本 README 的实时战绩段。
 - **样本外回测框架**（[analysis/backtest.py](analysis/backtest.py)）—— 严格按时间切训练/测试集（8112 场样本外），用统一指标（Brier / LogLoss / 分层）对比模型变体，杜绝"挑顺眼的比赛自夸"。
 - **Dixon-Coles 平局修正** —— 回测确诊基线双泊松**系统性低估平局**（预测 20.8% vs 真实 23.1%），集成 DC 修正后平局校准回到 22%，在"实际平局""大热门被逼平"等失误场景上 Brier 改善 3–4%。诚实声明：整体提升约 0.1%、命中率仍 ~60%（足球预测天花板）——收益是**更校准**，不是更会猜。用 `today.py --no-dc` 可一键对比优化前后。
+- **期中复盘 + 条件重模拟**（[analysis/midterm_review.py](analysis/midterm_review.py)）—— 小组赛 + 32 强战罢后逐场交作业：分阶段命中率 / Brier / 被打脸最狠场次，并**条件在真实赛果上**重跑 2 万届蒙特卡洛（已赛比赛用真实胜者、未赛比赛用模型抽样），输出最新夺冠概率与开赛前预测的逐队对比。
 
 ## 🔌 JSON API
 
@@ -175,7 +179,8 @@ worldcup-predictor/
 │   ├── model.py        # 泊松进球模型 + Dixon-Coles 平局修正（历史数据拟合）
 │   └── simulate.py     # 赛制解析 + 蒙特卡洛
 ├── analysis/
-│   └── backtest.py     # 样本外回测：对比模型变体（Brier/LogLoss/分层）
+│   ├── backtest.py     # 样本外回测：对比模型变体（Brier/LogLoss/分层）
+│   └── midterm_review.py  # 期中复盘 + 条件在真实赛果上的重模拟
 ├── webapp/
 │   ├── server.py       # 标准库 http.server + JSON API
 │   └── static/         # 原生 HTML/CSS/JS 前端
